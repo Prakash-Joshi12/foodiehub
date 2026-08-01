@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Checkout — FoodieNepal{% endblock %}
+{% block content %}
+<main class="form reveal">
+  <h1>Checkout</h1>
+  <div class="panel" style="margin:14px 0 20px">
+    <div class="row" style="margin:0"><span>Order total</span><b style="font-size:22px;color:var(--accent)">Rs. {{total}}</b></div>
+  </div>
+
+  <form method="post" id="checkoutForm">
+    <label>Delivery address</label>
+    <input name="address" placeholder="House no., street, city" required>
+    <label>Phone number</label>
+    <input name="phone" placeholder="98XXXXXXXX" required>
+
+    <label>Location (optional, helps delivery accuracy)</label>
+    <div class="row" style="margin:0;gap:10px">
+      <input name="lat" placeholder="Latitude" id="lat" style="flex:1">
+      <input name="lng" placeholder="Longitude" id="lng" style="flex:1">
+    </div>
+    <button type="button" class="btn secondary" style="margin-top:10px;width:max-content" onclick="foodieLocate('lat','lng')">📍 Use current location</button>
+
+    <label style="margin-top:18px">Payment method</label>
+    <div class="role-picker" id="payPicker" style="grid-template-columns:repeat(3,1fr)">
+      <div class="role-opt active" data-pay="COD"><span class="ic">💵</span>Cash on Delivery</div>
+      <div class="role-opt" data-pay="eSewa"><span class="ic">📱</span>eSewa</div>
+      <div class="role-opt" data-pay="Khalti"><span class="ic">💜</span>Khalti</div>
+      <div class="role-opt" data-pay="IMEPay"><span class="ic">🏦</span>IME Pay</div>
+      <div class="role-opt" data-pay="Fonepay"><span class="ic">📲</span>Fonepay</div>
+      <div class="role-opt" data-pay="Card"><span class="ic">💳</span>Card</div>
+    </div>
+    <input type="hidden" name="payment_method" id="payInput" value="COD">
+
+    <p class="hint">QR payment is shown only for eSewa and Khalti in this demo. Other methods confirm via a reference number, and Cash on Delivery needs no online step.</p>
+    <button class="btn block" type="submit" style="margin-top:10px">Place order</button>
+  </form>
+</main>
+
+<script>
+const payPicker=document.getElementById("payPicker");
+const payInput=document.getElementById("payInput");
+payPicker.addEventListener("click",e=>{
+  const opt=e.target.closest(".role-opt");
+  if(!opt) return;
+  payPicker.querySelectorAll(".role-opt").forEach(o=>o.classList.remove("active"));
+  opt.classList.add("active");
+  payInput.value=opt.dataset.pay;
+});
+</script>
+{% endblock %}

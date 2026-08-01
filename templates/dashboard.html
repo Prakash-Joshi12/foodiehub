@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — FoodieNepal{% endblock %}
+{% block content %}
+<main>
+  <h1 class="reveal">Welcome back, {{user.name}} 👋</h1>
+  <p style="color:var(--text-dim);margin-top:-8px" class="reveal">
+    {% if user.role=='admin' %}You manage the FoodieNepal platform.
+    {% elif user.role=='delivery' %}Ready to deliver some happiness today?
+    {% elif user.role=='restaurant' %}Here's what's happening with your restaurant.
+    {% else %}Craving something good?{% endif %}
+  </p>
+
+  <div class="stats reveal" style="margin:20px 0 10px">
+    <div><b data-count="{{orders|length}}">0</b><span>Recent orders</span></div>
+    <div><b data-count="{{notifications|length}}">0</b><span>Unread alerts</span></div>
+  </div>
+
+  <div class="section-title"><h2>Quick actions</h2></div>
+  <div class="grid reveal">
+    {% if user.role=='customer' %}
+    <a class="card" href="/"><div class="body"><h3>🍽️ Order food</h3><p style="color:var(--text-dim);font-size:13px">Browse restaurants near you</p></div></a>
+    <a class="card" href="/orders"><div class="body"><h3>📦 My orders</h3><p style="color:var(--text-dim);font-size:13px">Track and review past orders</p></div></a>
+    <a class="card" href="/cart"><div class="body"><h3>🛒 My cart</h3><p style="color:var(--text-dim);font-size:13px">Continue where you left off</p></div></a>
+    {% elif user.role=='delivery' %}
+    <a class="card" href="/orders"><div class="body"><h3>🛵 Available deliveries</h3><p style="color:var(--text-dim);font-size:13px">Accept unassigned orders</p></div></a>
+    {% elif user.role=='restaurant' %}
+    <a class="card" href="/orders"><div class="body"><h3>🧾 Incoming orders</h3><p style="color:var(--text-dim);font-size:13px">Confirm and prepare orders</p></div></a>
+    {% elif user.role=='admin' %}
+    <a class="card" href="/admin"><div class="body"><h3>🛠️ Admin panel</h3><p style="color:var(--text-dim);font-size:13px">Approvals, users & activity</p></div></a>
+    <a class="card" href="/orders"><div class="body"><h3>📦 All orders</h3><p style="color:var(--text-dim);font-size:13px">Platform-wide order feed</p></div></a>
+    {% endif %}
+  </div>
+
+  {% if messages %}
+  <div class="section-title"><h2>Messages from Admin</h2><span class="muted">{{messages|length}}</span></div>
+  <div class="reveal">
+    {% for m in messages %}
+    <div class="notice msg-inbox reveal">
+      <b style="color:var(--text)">{{m.subject}}</b>
+      <p style="margin:4px 0 0;color:var(--text-dim)">{{m.body}}</p>
+      <span style="font-size:11px;color:var(--text-faint)">{{m.created_at.strftime('%b %d, %H:%M')}}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="section-title"><h2>Notifications</h2><span class="muted">{{notifications|length}} unread</span></div>
+  {% if notifications %}
+  <div class="reveal">
+    {% for n in notifications %}
+    <div class="notice reveal" style="display:flex;justify-content:space-between;gap:14px;align-items:flex-start">
+      <div>
+        <b style="color:var(--text)">{{n.title}}</b>
+        <p style="margin:4px 0 0;color:var(--text-dim)">{{n.message}}</p>
+        <span style="font-size:11px;color:var(--text-faint)">{{n.created_at.strftime('%b %d, %H:%M')}}</span>
+      </div>
+      <form method="post" action="/notifications/read/{{n.id}}" style="margin:0">
+        <button class="btn small secondary" type="submit">Mark read</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><span class="big">🎉</span>You're all caught up — no unread notifications.</div>
+  {% endif %}
+
+  <div class="section-title"><h2>Recent orders</h2><a class="muted" href="/orders">View all →</a></div>
+  {% if orders %}
+  <div class="grid reveal">
+    {% for o in orders %}
+    <a class="card" href="/orders">
+      <div class="body">
+        <div class="row" style="margin:0"><b>Order #{{o.id}}</b><span class="status-badge {{status_css.get(o.status,'s-placed')}}">{{o.status}}</span></div>
+        <p style="color:var(--text-dim);font-size:13px;margin:6px 0 0">{{o.restaurant.name}} · Rs. {{o.total}}</p>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><span class="big">📦</span>No orders yet.</div>
+  {% endif %}
+</main>
+{% endblock %}

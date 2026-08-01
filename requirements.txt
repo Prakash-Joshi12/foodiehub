@@ -1,0 +1,10 @@
+Flask==3.1.1
+Flask-SQLAlchemy==3.1.1
+Werkzeug==3.1.3
+qrcode==7.4.2
+Pillow==10.4.0
+
+# --- Real-world / production additions ---
+python-dotenv==1.0.1     # loads .env locally; harmless no-op on hosts that set real env vars
+gunicorn==23.0.0          # production WSGI server (Linux/macOS; use "waitress" on Windows)
+psycopg2-binary==2.9.9    # PostgreSQL driver, used automatically when DATABASE_URL is Postgres

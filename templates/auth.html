@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Sign up' if register else 'Login' }} — FoodieNepal{% endblock %}
+{% block content %}
+<main style="max-width:520px">
+  <div class="tabs">
+    <button class="{{ 'active' if not register }}" onclick="location.href='/login'" type="button">Login</button>
+    <button class="{{ 'active' if register }}" onclick="location.href='/register'" type="button">Sign up</button>
+  </div>
+
+  <div class="form reveal" style="max-width:none">
+    {% if register %}
+      <h1 style="font-size:26px">Create your account</h1>
+      <p style="color:var(--text-dim);margin-top:-6px">Join FoodieNepal as a customer, delivery partner, or restaurant owner.</p>
+      <form method="post" id="registerForm">
+        <label>I am a…</label>
+        <div class="role-picker" id="rolePicker">
+          <div class="role-opt active" data-role="customer"><span class="ic">🧑‍🍳</span>Customer</div>
+          <div class="role-opt" data-role="delivery"><span class="ic">🛵</span>Delivery</div>
+          <div class="role-opt" data-role="restaurant"><span class="ic">🍽️</span>Restaurant</div>
+        </div>
+        <input type="hidden" name="role" id="roleInput" value="customer">
+
+        <label>Full name</label>
+        <input name="name" placeholder="Your full name" required>
+        <label>Email</label>
+        <input type="email" name="email" placeholder="you@example.com" required>
+        <label>Phone</label>
+        <input name="phone" placeholder="98XXXXXXXX">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Create a password" required minlength="4">
+
+        <div class="slide-fields" id="restaurantFields">
+          <div class="divider"></div>
+          <label>Restaurant name</label>
+          <input name="restaurant_name" placeholder="e.g. Kathmandu Momo House">
+          <label>Province</label>
+          <select name="province">
+            {% for p in provinces %}<option value="{{p}}">{{p}}</option>{% endfor %}
+          </select>
+          <label>District</label>
+          <input name="district" placeholder="District">
+          <label>City</label>
+          <input name="city" placeholder="City">
+          <label>Address</label>
+          <input name="address" placeholder="Street address">
+          <p class="hint">New restaurants need admin approval before appearing publicly.</p>
+        </div>
+
+        <button class="btn block" type="submit" style="margin-top:18px">Create account</button>
+      </form>
+    {% else %}
+      <h1 style="font-size:26px">Welcome back</h1>
+      <p style="color:var(--text-dim);margin-top:-6px">Login to order, deliver, or manage your restaurant.</p>
+      <form method="post">
+        <label>Email</label>
+        <input type="email" name="email" placeholder="you@example.com" required autofocus>
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Your password" required>
+        <button class="btn block" type="submit" style="margin-top:18px">Login</button>
+      </form>
+      <div class="notice" style="margin-top:20px">
+        <b>Demo accounts</b><br>
+        Admin: admin@foodienepal.com / admin123<br>
+        Customer: customer@foodienepal.com / customer123<br>
+        Delivery: delivery@foodienepal.com / delivery123<br>
+        Restaurant: owner@foodienepal.com / owner123
+      </div>
+    {% endif %}
+  </div>
+</main>
+
+{% if register %}
+<script>
+const rolePicker=document.getElementById("rolePicker");
+const roleInput=document.getElementById("roleInput");
+const restaurantFields=document.getElementById("restaurantFields");
+rolePicker.addEventListener("click",e=>{
+  const opt=e.target.closest(".role-opt");
+  if(!opt) return;
+  rolePicker.querySelectorAll(".role-opt").forEach(o=>o.classList.remove("active"));
+  opt.classList.add("active");
+  const role=opt.dataset.role;
+  roleInput.value=role;
+  restaurantFields.classList.toggle("open", role==="restaurant");
+});
+</script>
+{% endif %}
+{% endblock %}

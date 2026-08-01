@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Your cart — FoodieNepal{% endblock %}
+{% block content %}
+<main>
+  <h1 class="reveal">Your cart</h1>
+  {% if rows %}
+  <div class="two-col">
+    <div id="cartList">
+      {% for f,qty,line in rows %}
+      <div class="cart-row reveal" id="row-{{f.id}}">
+        <div style="font-size:30px">🍲</div>
+        <div style="flex:1">
+          <b>{{f.name}}</b>
+          <div style="color:var(--text-faint);font-size:12.5px">{{f.restaurant.name}} · Rs. {{f.price}} each</div>
+        </div>
+        <div class="qty-stepper">
+          <button type="button" onclick="foodieCartStep({{f.id}},-1,0)">−</button>
+          <span id="qty-{{f.id}}">{{qty}}</span>
+          <button type="button" onclick="foodieCartStep({{f.id}},1,0)">+</button>
+        </div>
+        <b style="min-width:90px;text-align:right">Rs. {{line}}</b>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="panel cart-summary reveal" id="cartSummaryBox">
+      <h3>Order summary</h3>
+      <div class="summary-line"><span>Subtotal</span><span id="cartSubtotal">Rs. {{total}}</span></div>
+      <div class="summary-line"><span>Delivery fee</span><span>Calculated at checkout</span></div>
+      <div class="summary-line total"><span>Total</span><span id="cartTotal">Rs. {{total}}</span></div>
+      <a class="btn block" style="margin-top:16px;display:block;text-align:center" href="/checkout">Proceed to checkout →</a>
+      <a class="btn ghost block" style="margin-top:10px;display:block;text-align:center" href="/">Add more items</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state" id="cartList">
+    <span class="big">🛒</span>
+    Your cart is empty.<br>
+    <a class="btn" style="margin-top:14px;display:inline-block" href="/">Browse restaurants</a>
+  </div>
+  {% endif %}
+</main>
+{% endblock %}

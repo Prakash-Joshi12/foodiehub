@@ -1,0 +1,67 @@
+FOODIENEPAL WORKING PROJECT
+
+PYCHARM / WINDOWS / PYTHON 3.14
+
+1. Extract this folder.
+2. Open it in PyCharm.
+3. Set the Python interpreter to Python 3.14.
+4. Open Terminal.
+5. Run:
+   python -m pip install -r requirements.txt
+6. Run:
+   python server.py
+7. Open:
+   http://127.0.0.1:5000
+
+DEMO ACCOUNTS
+
+Admin:
+admin@foodienepal.com
+admin123
+
+Customer:
+customer@foodienepal.com
+customer123
+
+Delivery:
+delivery@foodienepal.com
+delivery123
+
+Restaurant Owner:
+owner@foodienepal.com
+owner123
+
+The database is created automatically at:
+instance\foodienepal.db
+
+PAYMENT QR
+Only eSewa and Khalti show the demo QR.
+COD, IME Pay, Fonepay and Card do not show QR.
+The QR codes are now REAL, scannable images (generated with the qrcode
+library) encoding a demo payment reference — scan them with any QR
+reader to see the payload. No real money moves; this is simulation mode.
+
+Each restaurant's page also shows a "Scan to order" QR code that opens
+that restaurant directly — handy for a printed table/menu QR in a real
+restaurant setup.
+
+NEW: ADMIN SECTION UPGRADES
+- Admin > Reviews tab: see every customer review + photo across the platform.
+- Admin > Messages tab: message any single restaurant owner, delivery
+  partner, or customer directly. It lands in their notification bell
+  AND on their dashboard under "Messages from Admin". You can also
+  broadcast an announcement to an entire role (all restaurants, all
+  delivery partners, all customers, or everyone).
+- Admin > Activity tab: EVERY action on the platform (registrations,
+  logins/logouts, orders placed, payments, delivery accepted, status
+  changes, reviews, restaurant approvals, admin messages) is logged
+  here in real time and also pushed to the admin notification bell.
+
+NEW: FEEDBACK / REVIEWS
+- Customers can now upload multiple photos per review (not just one).
+- Reviews include separate Food quality and Delivery experience star
+  ratings alongside the overall rating.
+- All photos show as a clickable gallery on the restaurant page and in
+  the admin Reviews tab.
+
+The eSewa/Khalti payment screens are demo flows. Real payments require official merchant API credentials and webhook verification.

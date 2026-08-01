@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Orders — FoodieNepal{% endblock %}
+{% block content %}
+<main>
+  <h1 class="reveal">
+    {% if user.role=='customer' %}My orders
+    {% elif user.role=='delivery' %}Deliveries
+    {% elif user.role=='restaurant' %}Incoming orders
+    {% else %}All orders{% endif %}
+  </h1>
+
+  {% if orders %}
+  {% for o in orders %}
+  <div class="panel reveal" id="order-{{o.id}}">
+    <div class="row">
+      <div>
+        <b style="font-size:16px">Order #{{o.id}}</b>
+        <span style="color:var(--text-faint);font-size:12.5px;margin-left:8px">{{o.created_at.strftime('%b %d, %Y · %H:%M')}}</span>
+      </div>
+      <span class="status-badge {{status_css.get(o.status,'s-placed')}}">{{o.status}}</span>
+    </div>
+
+    <div class="meta" style="margin-top:8px;color:var(--text-dim);font-size:13.5px">
+      🍽️ {{o.restaurant.name}} &nbsp;·&nbsp; 👤 {{o.customer.name}} &nbsp;·&nbsp; 💰 Rs. {{o.total}} &nbsp;·&nbsp; 💳 {{o.payment_method}} ({{o.payment_status}})
+      {% if o.delivery %} &nbsp;·&nbsp; 🛵 {{o.delivery.name}}{% endif %}
+    </div>
+
+    {% if o.status != 'Cancelled' %}
+    <div class="timeline">
+      {% set flow=['Placed','Confirmed','Preparing','Ready','Assigned','Picked Up','On the Way','Delivered'] %}
+      {% set current_idx=flow.index(o.status) if o.status in flow else -1 %}
+      {% for s in flow %}
+      <div class="step {{ 'done' if loop.index0 < current_idx else '' }} {{ 'current' if loop.index0 == current_idx else '' }}">
+        <div class="line"></div>
+        <div class="dot">{{ '✓' if loop.index0 < current_idx else '' }}</div>
+        <small>{{s}}</small>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="hint danger" style="margin-top:12px">❌ This order was cancelled.</div>
+    {% endif %}
+
+    <div style="margin-top:6px">
+      <details>
+        <summary style="cursor:pointer;color:var(--text-dim);font-size:13px">View items</summary>
+        <ul style="margin:8px 0 0;padding-left:18px;color:var(--text-dim);font-size:13.5px">
+          {% for it in o.items %}<li>{{it.quantity}} × {{it.food.name}} — Rs. {{it.price * it.quantity}}</li>{% endfor %}
+        </ul>
+      </details>
+    </div>
+
+    <div class="row" style="margin-top:14px;gap:10px">
+      {% if user.role=='customer' %}
+        {% if o.payment_status=='Pending' and o.payment_method!='COD' %}
+        <a class="btn small" href="/pay/{{o.id}}">💳 Pay now</a>
+        {% endif %}
+        {% if o.status in ['Assigned','Picked Up','On the Way'] %}
+        <a class="btn small secondary" href="/static/track.html?order={{o.id}}" target="_blank">🗺️ Track live</a>
+        {% endif %}
+        {% if o.status=='Delivered' %}
+        <a class="btn small secondary" href="/restaurant/{{o.restaurant_id}}">⭐ Leave a review</a>
+        {% endif %}
+      {% endif %}
+
+      {% if user.role=='delivery' %}
+        {% if not o.delivery_id and o.status in ['Placed','Confirmed','Preparing','Ready'] %}
+        <form method="post" action="/orders/{{o.id}}/accept" style="margin:0">
+          <button class="btn small" type="submit">🛵 Accept delivery</button>
+        </form>
+        {% elif o.delivery_id==user.id and o.status not in ['Delivered','Cancelled'] %}
+        <form method="post" action="/orders/{{o.id}}/status" style="margin:0;display:flex;gap:8px">
+          <select name="status">
+            {% for s in ['Picked Up','On the Way','Delivered'] %}<option value="{{s}}" {{'selected' if o.status==s}}>{{s}}</option>{% endfor %}
+          </select>
+          <button class="btn small" type="submit">Update</button>
+        </form>
+        <button type="button" class="btn small secondary gps-btn" data-oid="{{o.id}}" onclick="toggleGps({{o.id}},this)">📡 Share live location</button>
+        {% endif %}
+      {% endif %}
+
+      {% if user.role in ['restaurant','admin'] and o.status not in ['Delivered','Cancelled'] %}
+      <form method="post" action="/orders/{{o.id}}/status" style="margin:0;display:flex;gap:8px">
+        <select name="status">
+          {% for s in statuses %}<option value="{{s}}" {{'selected' if o.status==s}}>{{s}}</option>{% endfor %}
+        </select>
+        <button class="btn small" type="submit">Update status</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state"><span class="big">📦</span>No orders to show yet.</div>
+  {% endif %}
+</main>
+
+<script>
+const gpsTimers={};
+function toggleGps(oid, btn){
+  if(gpsTimers[oid]){
+    navigator.geolocation.clearWatch(gpsTimers[oid]);
+    delete gpsTimers[oid];
+    btn.innerHTML="📡 Share live location";
+    btn.classList.remove("danger");
+    foodieToast("Stopped sharing location for order #"+oid);
+    return;
+  }
+  if(!navigator.geolocation){ foodieToast("Geolocation not available in this browser.","error"); return; }
+  btn.innerHTML='<span class="pulse-marker" style="width:9px;height:9px;display:inline-block;margin-right:6px;vertical-align:middle"></span>Sharing… (tap to stop)';
+  btn.classList.add("danger");
+  const send=(pos)=>{
+    fetch("/api/orders/"+oid+"/location",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({lat:pos.coords.latitude,lng:pos.coords.longitude})}).catch(()=>{});
+  };
+  navigator.geolocation.getCurrentPosition(send);
+  gpsTimers[oid]=navigator.geolocation.watchPosition(send, ()=>foodieToast("Location permission denied.","error"), {enableHighAccuracy:true});
+  foodieToast("Live location sharing started for order #"+oid,"success");
+}
+</script>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}{{r.name}} — FoodieNepal{% endblock %}
+{% block content %}
+<main>
+  <div class="panel reveal" style="background:linear-gradient(135deg,var(--card),#241407);position:relative;overflow:hidden">
+    <div class="row">
+      <div>
+        <h1 style="font-size:30px">{{r.name}}</h1>
+        <div class="meta" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+          <span class="pill">📍 {{r.address or (r.city ~ ', ' ~ r.province)}}</span>
+          {% if r.phone %}<span class="pill">📞 {{r.phone}}</span>{% endif %}
+          {% if avg_rating %}
+          <span class="pill" style="background:rgba(240,196,25,.12);color:#f0c419;border-color:rgba(240,196,25,.3)">★ {{avg_rating}} · {{reviews|length}} review{{'s' if reviews|length!=1}}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div style="text-align:center">
+        <div class="qr small"><img class="qr-img" src="data:image/png;base64,{{table_qr}}" alt="Scan to order QR code"></div>
+        <span class="pill" style="font-size:10.5px">📱 Scan to order</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-title"><h2>Menu</h2><span class="muted">{{foods|length}} item{{'s' if foods|length!=1}}</span></div>
+
+  {% if foods %}
+  {% for cat in categories %}
+  <h3 style="margin:22px 0 10px;color:var(--accent)">{{cat}}</h3>
+  <div class="grid">
+    {% for f in foods if (f.category or 'Other')==cat %}
+    <div class="card reveal">
+      <div class="thumb">🍲</div>
+      <div class="body">
+        <h3>{{f.name}}</h3>
+        <p style="color:var(--text-dim);font-size:13px;margin:0">{{f.description}}</p>
+        <div class="row" style="margin-top:auto">
+          <b style="font-size:18px;color:var(--accent)">Rs. {{f.price}}</b>
+          {% if user %}
+          <form method="post" action="/cart/add/{{f.id}}" style="display:flex;gap:8px;align-items:center;margin:0">
+            <input type="number" name="qty" value="1" min="1" style="width:56px;padding:8px" required>
+            <button class="btn small" type="submit">Add</button>
+          </form>
+          {% else %}
+          <a class="btn small" href="/login">Login to order</a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state"><span class="big">🍽️</span>No menu items available yet.</div>
+  {% endif %}
+
+  <div class="section-title"><h2>Reviews</h2><span class="muted">What customers are saying</span></div>
+
+  {% if user and user.role=='customer' %}
+  <div class="panel reveal">
+    <h3 style="margin-bottom:10px">Leave a review</h3>
+    <form method="post" action="/review/{{r.id}}" enctype="multipart/form-data">
+      <label>Overall rating</label>
+      <div class="star-input" id="starBox"></div>
+      <input type="hidden" name="rating" id="ratingInput" value="5" required>
+
+      <div class="row" style="gap:24px;margin-top:8px">
+        <div>
+          <label>Food quality</label>
+          <div class="star-input" id="starFood"></div>
+          <input type="hidden" name="food_rating" id="foodRatingInput" value="5">
+        </div>
+        <div>
+          <label>Delivery experience</label>
+          <div class="star-input" id="starDelivery"></div>
+          <input type="hidden" name="delivery_rating" id="deliveryRatingInput" value="5">
+        </div>
+      </div>
+
+      <label>Comment</label>
+      <textarea name="comment" placeholder="How was the food and delivery?" required></textarea>
+      <label>Photos (optional — add as many as you like)</label>
+      <input type="file" name="photos" accept="image/*" multiple>
+      <button class="btn" type="submit" style="margin-top:14px;width:max-content">Submit review</button>
+    </form>
+  </div>
+  <script>
+    foodieStarInput('starBox','ratingInput',5);
+    foodieStarInput('starFood','foodRatingInput',5);
+    foodieStarInput('starDelivery','deliveryRatingInput',5);
+  </script>
+  {% endif %}
+
+  {% if reviews %}
+  {% for rv in reviews %}
+  <div class="review reveal">
+    <div class="row" style="margin:0 0 6px">
+      <b>{{rv.customer.name}}</b>
+      <span class="stars">{% for i in range(1,6) %}{% if i<=rv.rating %}★{% else %}<span class="empty">★</span>{% endif %}{% endfor %}</span>
+    </div>
+    {% if rv.food_rating or rv.delivery_rating %}
+    <div class="subratings">
+      {% if rv.food_rating %}<span>Food: <b>{{rv.food_rating}}/5</b></span>{% endif %}
+      {% if rv.delivery_rating %}<span>Delivery: <b>{{rv.delivery_rating}}/5</b></span>{% endif %}
+    </div>
+    {% endif %}
+    <p style="margin:0 0 8px;color:var(--text-dim)">{{rv.comment}}</p>
+    {% if rv.photos %}
+    <div class="review-gallery">
+      {% for ph in rv.photos %}
+      <img src="/static/uploads/{{ph.filename}}" alt="review photo" onclick="window.open(this.src,'_blank')">
+      {% endfor %}
+    </div>
+    {% elif rv.photo %}
+    <img src="/static/uploads/{{rv.photo}}" alt="review photo">
+    {% endif %}
+    <div style="margin-top:8px"><span class="muted" style="font-size:11px">{{rv.created_at.strftime('%b %d, %Y')}}</span></div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="empty-state"><span class="big">💬</span>No reviews yet — be the first to share your experience.</div>
+  {% endif %}
+</main>
+{% endblock %}

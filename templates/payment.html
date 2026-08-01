@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Payment — FoodieNepal{% endblock %}
+{% block content %}
+<main class="form reveal">
+  <h1>Payment</h1>
+  <div class="panel" style="margin:14px 0 20px">
+    <div class="row" style="margin:0 0 8px"><span>Order</span><b>#{{order.id}}</b></div>
+    <div class="row" style="margin:0 0 8px"><span>Amount due</span><b style="font-size:20px;color:var(--accent)">Rs. {{order.total}}</b></div>
+    <div class="row" style="margin:0"><span>Method</span><span class="pill">{{payment.method}}</span></div>
+  </div>
+
+  {% if payment.method == "COD" %}
+    <div class="notice">
+      <h3 style="margin-top:0">💵 Cash on Delivery</h3>
+      <p style="margin:0">No QR code is required. Please keep exact change ready — payment will be collected when your order arrives.</p>
+    </div>
+    <form method="post">
+      <button class="btn block" type="submit">Confirm Cash on Delivery</button>
+    </form>
+
+  {% elif show_qr %}
+    <div class="qr-wrap">
+      <h3>{{payment.method}} demo QR</h3>
+      <div class="qr">
+        {% if qr_b64 %}
+        <img class="qr-img" src="data:image/png;base64,{{qr_b64}}" alt="{{payment.method}} demo payment QR code">
+        {% else %}
+        <div class="qtext"><b>DEMO QR</b><br>{{payment.method}}<br>FOODIENEPAL<br>Order #{{order.id}}<br>Rs. {{order.total}}</div>
+        {% endif %}
+      </div>
+      <p class="qr-caption">Scan with any QR scanner or your {{payment.method}} app — it encodes a demo payment reference for order #{{order.id}}. Then enter the transaction reference below to confirm.</p>
+      <span class="pill" style="margin-top:6px">🔒 Simulation mode — no real money moves</span>
+    </div>
+    <form method="post">
+      <input name="reference" placeholder="Transaction reference" required>
+      <button class="btn block" type="submit" style="margin-top:12px">Confirm payment</button>
+    </form>
+
+  {% else %}
+    <div class="notice">
+      <h3 style="margin-top:0">{{payment.method}} payment</h3>
+      <p style="margin:0">No QR code is used for this method in this demo. Complete payment through your {{payment.method}} channel, then enter the reference number.</p>
+    </div>
+    <form method="post">
+      <input name="reference" placeholder="Transaction / reference number" required>
+      <button class="btn block" type="submit" style="margin-top:12px">Confirm payment</button>
+    </form>
+  {% endif %}
+</main>
+{% endblock %}

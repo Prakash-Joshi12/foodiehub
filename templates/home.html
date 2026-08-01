@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}FoodieNepal — Order food from across Nepal{% endblock %}
+{% block content %}
+<section class="hero">
+  <span class="eyebrow">🇳🇵 Now delivering in 7 provinces</span>
+  <h1>Real Nepali flavors,<br><span class="grad">delivered hot & fast.</span></h1>
+  <p class="sub">From steaming momos in Kathmandu to Thakali thalis in Pokhara — order from local restaurants near you and track your delivery live on the map.</p>
+
+  <form class="search" method="get" action="/">
+    <input type="text" name="q" placeholder="Search restaurant, city or dish…" value="{{ q or '' }}">
+    <select name="province">
+      <option value="">All provinces</option>
+      {% for p in provinces %}
+      <option value="{{p}}" {{ 'selected' if province==p }}>{{p}}</option>
+      {% endfor %}
+    </select>
+    <input type="hidden" name="lat" id="heroLat">
+    <input type="hidden" name="lng" id="heroLng">
+    <button type="button" class="btn secondary" onclick="foodieLocate('heroLat','heroLng',()=>this.closest('form').submit())">📍 Near me</button>
+    <button type="submit">Search</button>
+  </form>
+</section>
+
+<main>
+  <div class="section-title">
+    <h2>{{ restaurants|length }} restaurant{{ 's' if restaurants|length != 1 }} {{ 'found' if (q or province) else 'open now' }}</h2>
+    <span class="muted">Sorted by {{ 'distance' if distances else 'relevance' }}</span>
+  </div>
+
+  {% if restaurants %}
+  <div class="grid">
+    {% for r in restaurants %}
+    <a class="card reveal" href="/restaurant/{{r.id}}">
+      <div class="thumb">🍛</div>
+      <div class="body">
+        <h3>{{r.name}}</h3>
+        <div class="meta">
+          <span class="pill">📍 {{r.city}}, {{r.province}}</span>
+          {% if distances.get(r.id) is defined %}
+          <span class="pill dist">🧭 {{distances[r.id]}} km</span>
+          {% endif %}
+        </div>
+        {% if ratings.get(r.id) %}
+        <div class="meta">
+          <span class="stars">{% for i in range(1,6) %}{% if i <= ratings[r.id].avg|round(0,'floor') %}★{% else %}<span class="empty">★</span>{% endif %}{% endfor %}</span>
+          <span style="color:var(--text-faint);font-size:12px">{{ratings[r.id].avg}} ({{ratings[r.id].count}} reviews)</span>
+        </div>
+        {% else %}
+        <div class="meta"><span style="color:var(--text-faint);font-size:12px">No reviews yet</span></div>
+        {% endif %}
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <span class="big">🔍</span>
+    No restaurants match your search. Try a different city or clear the province filter.
+  </div>
+  {% endif %}
+
+  <div class="section-title"><h2>Explore the map</h2><span class="muted">Live restaurant locations</span></div>
+  <div id="map"></div>
+</main>
+
+<script>foodieHomeMap();</script>
+{% endblock %}

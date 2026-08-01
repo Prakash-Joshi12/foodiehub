@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Admin panel — FoodieNepal{% endblock %}
+{% block content %}
+<main>
+  <h1 class="reveal">Admin panel</h1>
+
+  <div class="stats reveal" style="margin:18px 0 26px">
+    <div><b data-count="{{users|length}}">0</b><span>Total users</span></div>
+    <div><b data-count="{{restaurants|length}}">0</b><span>Restaurants</span></div>
+    <div><b data-count="{{restaurants|selectattr('approved')|list|length}}">0</b><span>Approved</span></div>
+    <div><b data-count="{{orders|length}}">0</b><span>Total orders</span></div>
+  </div>
+
+  <div class="tabs" id="adminTabs">
+    <button class="active" data-tab="restaurants" type="button">Restaurants</button>
+    <button data-tab="users" type="button">Users</button>
+    <button data-tab="orders" type="button">Orders</button>
+    <button data-tab="reviews" type="button">Reviews</button>
+    <button data-tab="messages" type="button">Messages</button>
+    <button data-tab="activity" type="button">Activity</button>
+  </div>
+
+  <section class="tab-pane" id="tab-restaurants">
+    <div class="panel reveal" style="padding:0;overflow:auto">
+      <table>
+        <thead><tr><th>Name</th><th>Location</th><th>Owner</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          {% for r in restaurants %}
+          <tr>
+            <td><b>{{r.name}}</b></td>
+            <td>{{r.city}}, {{r.province}}</td>
+            <td>{{r.owner.name if r.owner else '—'}}</td>
+            <td><span class="status-badge {{'s-delivered' if r.approved else 's-cancelled'}}">{{'Approved' if r.approved else 'Pending'}}</span></td>
+            <td>
+              <form method="post" action="/admin/restaurant/{{r.id}}" style="margin:0">
+                <button class="btn small {{'secondary' if r.approved else ''}}" type="submit">{{'Disable' if r.approved else 'Approve'}}</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="tab-pane" id="tab-users" style="display:none">
+    <div class="panel reveal" style="padding:0;overflow:auto">
+      <table>
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Province</th><th>Joined</th></tr></thead>
+        <tbody>
+          {% for u in users %}
+          <tr>
+            <td>{{u.name}}</td><td>{{u.email}}</td>
+            <td><span class="pill">{{u.role}}</span></td>
+            <td>{{u.province or '—'}}</td>
+            <td>{{u.created_at.strftime('%b %d, %Y')}}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="tab-pane" id="tab-orders" style="display:none">
+    <div class="panel reveal" style="padding:0;overflow:auto">
+      <table>
+        <thead><tr><th>#</th><th>Restaurant</th><th>Customer</th><th>Total</th><th>Payment</th><th>Status</th></tr></thead>
+        <tbody>
+          {% for o in orders %}
+          <tr>
+            <td>{{o.id}}</td><td>{{o.restaurant.name}}</td><td>{{o.customer.name}}</td>
+            <td>Rs. {{o.total}}</td><td>{{o.payment_method}} · {{o.payment_status}}</td>
+            <td><span class="status-badge {{status_css.get(o.status,'s-placed')}}">{{o.status}}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="tab-pane" id="tab-reviews" style="display:none">
+    <div class="panel reveal">
+      {% for rv in reviews %}
+      <div class="review" style="margin-bottom:14px">
+        <div class="row" style="margin:0 0 6px">
+          <b>{{rv.customer.name}}</b> <span class="muted">→ {{rv.restaurant.name}}</span>
+          <span class="stars">{% for i in range(1,6) %}{% if i<=rv.rating %}★{% else %}<span class="empty">★</span>{% endif %}{% endfor %}</span>
+        </div>
+        <p style="margin:0 0 8px;color:var(--text-dim)">{{rv.comment}}</p>
+        {% if rv.photos %}
+        <div class="review-gallery">
+          {% for ph in rv.photos %}<img src="/static/uploads/{{ph.filename}}" alt="review photo" onclick="window.open(this.src,'_blank')">{% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="notif-empty">No reviews yet.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="tab-pane" id="tab-messages" style="display:none">
+    <div class="grid" style="grid-template-columns:1fr 1fr;gap:20px;align-items:start">
+      <div class="panel reveal">
+        <h3 style="margin-top:0">Message a restaurant or delivery partner</h3>
+        <p class="muted" style="margin-top:-6px">Sends directly to their notification bell &amp; dashboard inbox.</p>
+        <form method="post" action="/admin/message">
+          <label>Recipient</label>
+          <select name="recipient_id" required>
+            <option value="" disabled selected>Choose a person…</option>
+            <optgroup label="🍽️ Restaurant owners">
+              {% for o in owners %}<option value="{{o.id}}">{{o.name}} — {{o.email}}</option>{% endfor %}
+            </optgroup>
+            <optgroup label="🛵 Delivery partners">
+              {% for d in deliveries %}<option value="{{d.id}}">{{d.name}} — {{d.email}}</option>{% endfor %}
+            </optgroup>
+            <optgroup label="🙋 Customers">
+              {% for c in customers %}<option value="{{c.id}}">{{c.name}} — {{c.email}}</option>{% endfor %}
+            </optgroup>
+          </select>
+          <label>Subject</label>
+          <input type="text" name="subject" placeholder="e.g. Please update your delivery hours" required>
+          <label>Message</label>
+          <textarea name="body" placeholder="Type your message…" required></textarea>
+          <button class="btn" type="submit" style="margin-top:14px">Send message</button>
+        </form>
+
+        <h3 style="margin:26px 0 10px">Broadcast an announcement</h3>
+        <form method="post" action="/admin/broadcast">
+          <label>Audience</label>
+          <select name="target_role" required>
+            <option value="restaurant">All restaurant owners</option>
+            <option value="delivery">All delivery partners</option>
+            <option value="customer">All customers</option>
+            <option value="all">Everyone</option>
+          </select>
+          <label>Subject</label>
+          <input type="text" name="subject" placeholder="Announcement subject" required>
+          <label>Message</label>
+          <textarea name="body" placeholder="Type your announcement…" required></textarea>
+          <button class="btn secondary" type="submit" style="margin-top:14px">Send broadcast</button>
+        </form>
+      </div>
+
+      <div class="panel reveal" style="padding:0">
+        <div style="padding:14px 16px 0"><b style="font-size:13px">Sent messages</b></div>
+        <div class="feed" style="max-height:520px">
+          {% for m in messages %}
+          <div class="msg-item">
+            <div class="mtop"><span class="mto">→ {{m.recipient.name}} <span class="pill" style="font-size:10px;padding:1px 8px">{{m.target_type}}</span></span><span class="mwhen">{{m.created_at.strftime('%b %d, %H:%M')}}</span></div>
+            <b>{{m.subject}}</b>
+            <div class="mbody">{{m.body}}</div>
+          </div>
+          {% else %}
+          <div class="notif-empty">No messages sent yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tab-pane" id="tab-activity" style="display:none">
+    <div class="panel reveal">
+      <div class="feed">
+        {% for a in activities %}
+        <div class="item">
+          <span class="who">{{a.actor.name if a.actor else 'System'}}</span>
+          <span>{{a.action}}</span>
+          <span class="when">{{a.created_at.strftime('%b %d, %H:%M')}}</span>
+        </div>
+        {% else %}
+        <div class="notif-empty">No activity recorded yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+document.getElementById("adminTabs").addEventListener("click",e=>{
+  const btn=e.target.closest("button[data-tab]");
+  if(!btn) return;
+  document.querySelectorAll("#adminTabs button").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  document.querySelectorAll(".tab-pane").forEach(p=>p.style.display="none");
+  document.getElementById("tab-"+btn.dataset.tab).style.display="block";
+});
+</script>
+{% endblock %}

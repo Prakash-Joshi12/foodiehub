@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}FoodieNepal{% endblock %}</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="/static/css/style.css">
+<link rel="icon" href="data:,">
+{% block head %}{% endblock %}
+</head>
+<body>
+
+<div class="toast-stack" id="toastStack"></div>
+
+<header class="site-header" id="siteHeader">
+  <div class="header-inner">
+    <a href="/" class="brand"><span class="brand-icon">🍽️</span>FoodieNepal</a>
+    <nav class="main-nav" id="mainNav">
+      <a href="/" class="{{ 'active' if request.path=='/' }}">Home</a>
+      {% if user %}
+        <a href="/cart" class="{{ 'active' if request.path=='/cart' }}">Cart{% if cart_count %}<span class="badge" id="cartBadge">{{cart_count}}</span>{% endif %}</a>
+        <a href="/orders" class="{{ 'active' if request.path=='/orders' }}">Orders</a>
+        <a href="/dashboard" class="{{ 'active' if request.path=='/dashboard' }}">Dashboard</a>
+        {% if user.role=='admin' %}<a href="/admin" class="{{ 'active' if request.path=='/admin' }}">Admin</a>{% endif %}
+        <div class="notif-wrap">
+          <a href="javascript:void(0)" id="bellBtn">🔔{% if unread_count %}<span class="badge pulse" id="notifBadge">{{unread_count}}</span>{% endif %}</a>
+          <div class="notif-panel" id="notifPanel">
+            <div class="row" style="margin:0 0 6px;padding:0 6px">
+              <b style="font-size:13px">Notifications</b>
+              <a href="javascript:void(0)" id="markAllRead" style="font-size:11.5px;color:var(--accent)">Mark all read</a>
+            </div>
+            <div id="notifList"><div class="notif-empty">Loading…</div></div>
+          </div>
+        </div>
+        <a href="/logout" class="btn-ghost">Logout</a>
+      {% else %}
+        <a href="/login" class="{{ 'active' if request.path=='/login' }}">Login</a>
+        <a href="/register" class="btn-solid">Sign up</a>
+      {% endif %}
+    </nav>
+    <button class="nav-toggle" id="navToggle">☰</button>
+  </div>
+</header>
+
+{% with messages=get_flashed_messages() %}
+{% if messages %}<script>window.__flashes={{ messages|tojson }};</script>{% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<footer class="site-footer">
+  🍜 <b>FoodieNepal</b> — connecting Nepali kitchens to your doorstep, from Koshi to Sudurpashchim.
+  <br>Demo project · Payments (eSewa/Khalti/IME Pay/Fonepay) run in simulation mode.
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="/static/js/app.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
